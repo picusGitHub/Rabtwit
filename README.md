@@ -24,4 +24,3 @@ If not specified, `<min time between tweets>` is set to 5 and `<max time between
 
 #Contributors
 picus and all the rabbits out there. 
-Please report bugs or comment to #OpParis-Dev.
