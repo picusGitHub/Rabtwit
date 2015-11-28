@@ -7,7 +7,6 @@ Do not use your personal information/Twitter account with this program.
 
 ## Requirements
 The following python modules are needed:
-* `selenium` + `PhantomJS` 
 * `requests`
 * `simplejson`
 
@@ -16,9 +15,8 @@ The following python modules are needed:
 * Edit `searchterms.txt` to add/edit the search terms for images
 
 ## Usage
-`python rabtwit.py -u <Twitter username> [--silent] [--tmin=<min minutes between tweets> --tmax=<max minutes between tweets>]`
+`python rabtwit.py -u <Twitter username> [--tmin=<min minutes between tweets> --tmax=<max minutes between tweets>]`
 
-With `--silent` the tool is launched silently with the headless browser PhantomJS. Otherwise, Firefox or Chrome is used.
 If not specified, `<min time between tweets>` is set to 5 and `<max time between tweets>` is set to 10. The actual time between tweets is chosen randomly between the two numbers.
 
 

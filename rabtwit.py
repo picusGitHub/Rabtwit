@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 #
-# Name: Rabtwit (v.0.1.0)
+# Name: Rabtwit (v.0.2.0)
 # About: hashtag hijacking tool in Python. It sends tweets with the link of a random rabbit image from Google and with random tags from a file. 
 #        Let's hijack them with those cute bunnies <3
 #        Please customize the hashtags.txt and searchterms.txt files
@@ -32,62 +32,37 @@
 # Requirements:
 # - Python 2.7
 # - Python Requests Module (http://stackoverflow.com/questions/17309288/importerror-no-module-named-requests)
-# - Selenium (http://selenium-python.readthedocs.org)
-# - NodeJS (https://nodejs.org/en/)
-# - PhantomJS (http://phantomjs.org/) for --silent mode, Firefox or Chrome otherwise
 # - Simplejson (https://pypi.python.org/pypi/simplejson)
 #  
 # 
-# Usage:  python rabtwit.py -u <Twitter username> [--silent] [--tmin=<min minutes between tweets> --tmax=<max minutes between tweets>]
-# Example: the command "python rabtwit.py -u exampleuser --silent --tmin=7 --tmax=13" will tweet a rabbit every 7 to 13 minutes
+# Usage:  python rabtwit.py -u <Twitter username>  [--tmin=<min minutes between tweets> --tmax=<max minutes between tweets>]
+# Example: the command "python rabtwit.py -u exampleuser --tmin=7 --tmax=13" will tweet a rabbit every 7 to 13 minutes
 #           
 # Linux/Unix:
 # - Linux Pip install instructions: http://pip.readthedocs.org/en/stable/installing/
 # - Requests module instructions: http://stackoverflow.com/questions/17309288/importerror-no-module-named-requests (pip install requests) (pip install request[security])
-# - Selenium module instructions : http://selenium-python.readthedocs.org/installation.html (pip install selenium)
-# - NodeJS instructions: https://nodejs.org/en/download/
-# - PhantomJS instructions: https://www.npmjs.com/package/phantomjs (npm install -g phantomjs)
 # 
 # Windows:
 # - Make sure pip is installed: http://pip.readthedocs.org/en/stable/installing/
 # - Open up cmd and run c:\python27\scripts\easy_install.exe request
-# - Get the zip : https://github.com/cobrateam/splinter/archive/master.zip unzip on your disk, 
-# open a terminal (start menu -> type cmd -> launch cmd.exe) 
-# go in the folder you unzip splinter (cd XXXX) launch 'python setup.py install'
-# - You may also need to open up cmd and run the following command: c:\python27\scripts\easy_install.exe request
-# if the requests module is not installed
 # 
 # Need Help or Find a Bug?
 # - /join #OpParis-Dev - https://webchat.anonops.com/?channels=OpParis-Dev and contact picus or any other rabbit
 # 
 
-import sys
-import random
+import sys, time, getopt, getpass, random
 import simplejson as json
+from lxml.html import fromstring
 try:
-    from selenium import webdriver
-    from selenium.webdriver import ActionChains
-    from selenium.webdriver.common.keys import Keys
-    
-except:
-    print "Please install Selenium."
-    print "* Unix/Linux Use: sudo pip install selenium"
-    print "* Windows: See script's comments"
-    print "* More Info: http://selenium-python.readthedocs.org"
-    sys.exit()
-try:
-    import requests
+	import requests
 except:
     print "Please install the requests module."
     print "* Unix/Linux Use: pip install requests"
     print "* Windows in CMD: c:\python27\scripts\easy_install.exe request"
     print "* More Info: http://stackoverflow.com/questions/17309288/importerror-no-module-named-requests"
     sys.exit()
-    
-import getopt, re, time
-import getpass
 
-VERSION = "v 0.1.0"
+VERSION = "v 0.2.0"
 HASHTAGS_FILE="hashtags.txt"
 SEARCHTERMS_FILE="searchterms.txt"
 RABBIT="rabbit_art.txt"
@@ -97,20 +72,19 @@ DEFAULT_MAX_TIME=10
 
 def main(argv):
     username = None
-    boot_screen="*******************************************************\n"
+    boot_screen="\n*******************************************************\n"
     boot_screen+="*                   RabTwit "+VERSION+"                   *\n"                                   
     boot_screen+="*         Let's flood twitter with cute bunnies!      *\n"
     boot_screen+="*******************************************************"	
-    usageString = boot_screen+"\nUsage: python rabtwit.py -u <Twitter username>  [--silent] [--tmin=<min minutes between tweets> --tmax=<max minutes between tweets>] [-s]\n       If not specified, <min time between tweets> is set to 5, <max time between tweets> is set to 10"
+    usageString = boot_screen+"\nUsage: python rabtwit.py -u <Twitter username>  [--tmin=<min minutes between tweets> --tmax=<max minutes between tweets>]\n       If not specified, <min time between tweets> is set to 5, <max time between tweets> is set to 10.\n"
     try:
-        opts, args = getopt.getopt(argv,"h:u:",["user=","tmin=","tmax=","silent"])
+        opts, args = getopt.getopt(argv,"h:u:",["user=","tmin=","tmax="])
     except getopt.GetoptError:
         print usageString
         sys.exit(2)
 
     minTime=None
     maxTime=None
-    silent_mode=False
 
     for opt, arg in opts:
         if opt == '-h':
@@ -122,15 +96,11 @@ def main(argv):
 	    minTime=arg
 	elif opt == "--tmax":
 	    maxTime=arg
-	elif opt == "--silent":
-	    silent_mode=True
 
     #A few checks
     if not username:
         print usageString
-	print username+"*******************"
         sys.exit()
-    
     if ((not minTime) and (not maxTime)):
 	minTime=DEFAULT_MIN_TIME
 	maxTime=DEFAULT_MAX_TIME
@@ -152,29 +122,6 @@ def main(argv):
 
     password = getpass.getpass()
 
-
-# comment this line if you want to use privoxy + tor:
-    browser=None
-    if(silent_mode):
-	try:
-    		browser=webdriver.PhantomJS()
-	except:
-		print "Please install PhantomJS."
-		print "* npm install -g phantomjs"
-		print "* More info: https://www.npmjs.com/package/phantomjs"
-		sys.exit()
-    else:
-	try:
-		browser=webdriver.Firefox()
-	except:
-		try:
-			browser=webdriver.Chrome()
-		except:
-			print "Please put Firefox or Chrome driver executables in PATH."
-			sys.exit()
-			
-
-    browser.set_window_size(1120, 550)
 # uncomment this section if you want to use privoxy + tor:
 #    proxyIP = '127.0.0.1'
 #    proxyPort = 8118
@@ -190,22 +137,20 @@ def main(argv):
 #            'network.proxy.ftp_port':proxyPort 
 #            }
 #
-#    with Browser('firefox',profile_preferences=proxy_settings) as browser:
     try:
 	print "Connecting to twitter..."
-    	browser.get("https://mobile.twitter.com/session/new")
-        time.sleep(1)
-        browser.execute_script("document.getElementById('session[username_or_email]').value='"+username+"';")
-        browser.execute_script("document.getElementById('session[password]').value='"+password+"';")
-        browser.find_element_by_css_selector("input[type='submit']").click()
-        time.sleep(1)
-
-        if "https://mobile.twitter.com/login/error" in browser.current_url:
+	bot = requests.Session()
+	url = 'https://mobile.twitter.com/session'
+        response = bot.get(url)
+   
+        html = fromstring(response.content)
+        payload = dict(html.forms[0].fields)
+        payload.update({'username': username,'password': password,})
+ 	login=bot.post(url, data=payload)
+	
+	if "https://mobile.twitter.com/login/error" in login.url:
         	print "Twitter login Failed!"
                 sys.exit()
-	
-	hashtags=open(HASHTAGS_FILE).read().splitlines()
-	search_terms=open(SEARCHTERMS_FILE).read().splitlines()
 
     except Exception,e:
     	print "Unexpected error occured while trying the Twitter login. Please try running the script again."
@@ -213,10 +158,18 @@ def main(argv):
         sys.exit()
 
     print "Twitter login done!"
+
+    try:
+	hashtags=open(HASHTAGS_FILE).read().splitlines()
+    	search_terms=open(SEARCHTERMS_FILE).read().splitlines()
+    except:
+	print "Error while opening the hashtags and searchterms files."
+	sys.exit()
+    
     counter=1
+    print "Let's send some bunnies..."
     while True:
     	try:
-		print "Let's send some bunnies..."
 		tweet=""
                 # Get a random bunny type and get a picture from Google
 		rabbitType=random.choice(search_terms)
@@ -231,10 +184,13 @@ def main(argv):
 		tweet=url+tweet+" "+BUNNY_HASHTAG
 		
 		# Send the bunny
-		browser.get("https://mobile.twitter.com/compose/tweet")
-		browser.execute_script('document.getElementsByClassName("tweetbox")[0].value="'+tweet+'";')
-		time.sleep(1)	
-		browser.find_element_by_css_selector("input[type='submit']").click()
+		url = 'https://mobile.twitter.com/compose/tweet'
+	        response = bot.get(url)
+   
+                html = fromstring(response.content)
+                payload = dict(html.forms[0].fields)
+                payload.update({'tweet[text]': tweet})
+                bot.post("https://mobile.twitter.com/compose/tweet", data =payload)
 
 		print "   \\\\"
 		print "  __()"
@@ -246,13 +202,13 @@ def main(argv):
         except KeyboardInterrupt:
                 print 'Quit by keyboard interrupt sequence! Let the rabbits get some rest now.\n'
                 break
-        except HttpResponseError, e:
-                msg = 'HttpResponseError'
-                print msg
-                with open("log_Error.txt", "a") as log:
-                    log.write(msg+"\n")
+        #except HttpResponseError, e:
+         #       msg = '[HttpResponseError]:'+e
+	#	print msg
+         #       with open("log_Error.txt", "a") as log:
+          #          log.write(msg+"\n")
         except Exception,e:
-                msg = 'CatchAllError'
+                msg = '[CatchAllError]:'+str(e)
 		print e
                 with open("log_Error.txt", "a") as log:
                     log.write(msg+"\n")
