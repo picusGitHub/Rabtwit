@@ -53,6 +53,7 @@
 import sys, time, getopt, getpass, random
 import simplejson as json
 from lxml.html import fromstring
+import urllib2, re
 try:
 	import requests
 except:
