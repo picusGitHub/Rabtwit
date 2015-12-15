@@ -215,10 +215,27 @@ def main(argv):
 
 
 def get_random_image_url(topic):
-	rand=random.randint(1,50)
-	t=requests.get("http://ajax.googleapis.com/ajax/services/search/images?q="+topic+"&v=1.0&rsz=large&start="+str(rand)).content
-	decoded=json.loads(t)
-	return decoded['responseData']['results'][0]['unescapedUrl']
+	url = "https://www.google.ca/search?site=&tbm=isch&q="+topic+"#q="+topic+"&tbm=isch"
+	user_agent = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
+	#we need to put the user agent into a header format..
+	headers = {'User-Agent':user_agent,}
+  
+	#we also need to put it into the form of a request for urllib2
+	search_request = urllib2.Request(url,None,headers)
+  
+	#now we can request and print the data
+	search_results = urllib2.urlopen(search_request)
+	search_data = search_results.read()
+  
+	#Now we need to parse the data for links
+	#our first step is to compile a regular expression
+	pattern = re.compile('imgurl=([^>]+)&amp;imgrefurl')
+	#now we can search through the data with the new RE
+	image_list = pattern.findall(search_data)
+  
+  
+	index = random.randint(0,len(image_list)-1)
+	return image_list[index]
 	
 if __name__ == "__main__":
     try:
